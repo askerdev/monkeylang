@@ -1,27 +1,39 @@
 package repl
 
 import (
-	"bufio"
-	"fmt"
 	"io"
 
+	"github.com/askerdev/monkeylang/evaluator"
 	"github.com/askerdev/monkeylang/lexer"
 	"github.com/askerdev/monkeylang/parser"
+	"github.com/chzyer/readline"
 )
 
 const PROMPT = ">> "
 
-func Start(in io.Reader, out io.Writer) {
-	scanner := bufio.NewScanner(in)
+func Start(in io.ReadCloser, out io.Writer) {
+	rl, err := readline.NewEx(&readline.Config{
+		Prompt: "> ",
+		Stdin:  in,
+		Stdout: out,
+		Stderr: out,
+	})
+	if err != nil {
+		panic(err)
+	}
+	defer rl.Close()
 
 	for {
-		fmt.Printf(PROMPT)
-		scanned := scanner.Scan()
-		if !scanned {
-			return
+		line, err := rl.Readline()
+		if err == readline.ErrInterrupt {
+			if len(line) == 0 {
+				break
+			}
+			continue
+		} else if err == io.EOF {
+			break
 		}
 
-		line := scanner.Text()
 		l := lexer.New(line)
 		p := parser.New(l)
 
@@ -31,8 +43,11 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		io.WriteString(out, program.String())
-		io.WriteString(out, "\n")
+		evaluated := evaluator.Eval(program)
+		if evaluated != nil {
+			io.WriteString(out, evaluated.Inspect())
+			io.WriteString(out, "\n")
+		}
 	}
 }
 
