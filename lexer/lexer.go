@@ -1,6 +1,8 @@
 package lexer
 
-import "github.com/askerdev/monkeylang/token"
+import (
+	"github.com/askerdev/monkeylang/token"
+)
 
 type Lexer struct {
 	input string
@@ -70,6 +72,10 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.LT, l.ch)
 	case '>':
 		tok = newToken(token.GT, l.ch)
+	case '"':
+		tok.Type = token.STRING
+		tok.Literal = l.readString()
+		return tok
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
@@ -122,6 +128,17 @@ func (l *Lexer) readNumber() string {
 		l.readChar()
 	}
 	return l.input[position:l.position]
+}
+
+func (l *Lexer) readString() string {
+	l.readChar()
+	position := l.position
+	for l.ch != '"' {
+		l.readChar()
+	}
+	s := l.input[position:l.position]
+	l.readChar()
+	return s
 }
 
 func (l *Lexer) readIdentifier() string {

@@ -17,6 +17,7 @@ func TestLetStatements(t *testing.T) {
 		{"let x = 5;", "x", 5},
 		{"let y = true;", "y", true},
 		{"let foobar = y;", "foobar", "y"},
+		{`let foobar = "hello";`, "foobar", "hello"},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
@@ -106,6 +107,39 @@ func TestIdentifierExpression(t *testing.T) {
 	}
 }
 
+func TestStringLiteralExpression(t *testing.T) {
+	input := `"hello";`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program has not enough statements. got %d",
+			len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not *ast.ExpressionStatement. got %T",
+			stmt)
+	}
+
+	lit, ok := stmt.Expression.(*ast.StringLiteral)
+	if !ok {
+		t.Fatalf("program.Statements[0].Expression expected *ast.StringLiteral, got %T", stmt.Expression)
+	}
+
+	if lit.Value != "hello" {
+		t.Fatalf("expected value %q, got %q", "hello", lit.Value)
+	}
+
+	if lit.TokenLiteral() != "hello" {
+		t.Fatalf("expected lit.TokenLiteral() %q, got %q", "hello", lit.TokenLiteral())
+	}
+}
+
 func TestIntegerLiteralExpression(t *testing.T) {
 	input := "5;"
 
@@ -127,7 +161,7 @@ func TestIntegerLiteralExpression(t *testing.T) {
 
 	ident, ok := stmt.Expression.(*ast.IntegerLiteral)
 	if !ok {
-		t.Fatalf("program.Statements[0].Expression is not *ast.Identifier. got %T",
+		t.Fatalf("program.Statements[0].Expression is not *ast.IntegerLiteral. got %T",
 			stmt.Expression)
 	}
 	if ident.Value != 5 {
@@ -149,6 +183,8 @@ func TestParsingPrefixExpression(t *testing.T) {
 		{"-15", "-", 15},
 		{"!true;", "!", true},
 		{"!false;", "!", false},
+		{`!"hello";`, "!", "hello"},
+		{`-"hello";`, "-", "hello"},
 	}
 
 	for _, tt := range tc {
@@ -203,6 +239,7 @@ func TestParsingInfixExpression(t *testing.T) {
 		{"true == true", true, "==", true},
 		{"true != false", true, "!=", false},
 		{"false == false", false, "==", false},
+		{`"hello" + "world";`, "hello", "+", "world"},
 	}
 
 	for _, tt := range tc {
@@ -581,21 +618,33 @@ func testLiteralExpression(t *testing.T, exp ast.Expression, expected any) bool 
 }
 
 func testIdentifier(t *testing.T, exp ast.Expression, value string) bool {
-	ident, ok := exp.(*ast.Identifier)
-	if !ok {
-		t.Errorf("exp expected *ast.Identifier, got %T", exp)
-		return false
-	}
+	switch v := exp.(type) {
+	case *ast.Identifier:
+		if v.Value != value {
+			t.Errorf("ident.Value expected %q, got %q", value,
+				v.Value)
+			return false
+		}
 
-	if ident.Value != value {
-		t.Errorf("ident.Value expected %q, got %q", value,
-			ident.Value)
-		return false
-	}
+		if v.TokenLiteral() != value {
+			t.Errorf("ident.TokenLiteral() expected %q, got %q", value,
+				v.TokenLiteral())
+			return false
+		}
+	case *ast.StringLiteral:
+		if v.Value != value {
+			t.Errorf("str.Value expected %q, got %q", value,
+				v.Value)
+			return false
+		}
 
-	if ident.TokenLiteral() != value {
-		t.Errorf("ident.TokenLiteral() expected %q, got %q", value,
-			ident.TokenLiteral())
+		if v.TokenLiteral() != value {
+			t.Errorf("str.TokenLiteral() expected %q, got %q", value,
+				v.TokenLiteral())
+			return false
+		}
+	default:
+		t.Errorf("exp expected *ast.Identifier or *ast.StringLiteral, got %T", exp)
 		return false
 	}
 

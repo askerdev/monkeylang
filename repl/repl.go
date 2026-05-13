@@ -5,6 +5,7 @@ import (
 
 	"github.com/askerdev/monkeylang/evaluator"
 	"github.com/askerdev/monkeylang/lexer"
+	"github.com/askerdev/monkeylang/object"
 	"github.com/askerdev/monkeylang/parser"
 	"github.com/chzyer/readline"
 )
@@ -23,6 +24,8 @@ func Start(in io.ReadCloser, out io.Writer) {
 	}
 	defer rl.Close()
 
+	env := object.NewEnvironment()
+
 	for {
 		line, err := rl.Readline()
 		if err == readline.ErrInterrupt {
@@ -39,11 +42,11 @@ func Start(in io.ReadCloser, out io.Writer) {
 
 		program := p.ParseProgram()
 		if len(p.Errors()) != 0 {
-			printParserErrors(out, p.Errors())
+			PrintParserErrors(out, p.Errors())
 			continue
 		}
 
-		evaluated := evaluator.Eval(program)
+		evaluated := evaluator.Eval(program, env)
 		if evaluated != nil {
 			io.WriteString(out, evaluated.Inspect())
 			io.WriteString(out, "\n")
@@ -51,7 +54,7 @@ func Start(in io.ReadCloser, out io.Writer) {
 	}
 }
 
-func printParserErrors(out io.Writer, errors []string) {
+func PrintParserErrors(out io.Writer, errors []string) {
 	for _, msg := range errors {
 		io.WriteString(out, "\t"+msg+"\n")
 	}

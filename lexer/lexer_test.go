@@ -26,6 +26,12 @@ if (5 < 10) {
 
 10 == 10;
 10 != 9;
+
+"hello";
+
+"hello" + "world";
+
+"";
 `
 
 	tc := []struct {
@@ -78,6 +84,13 @@ if (5 < 10) {
 		{token.INT, "10"}, {token.NOT_EQ, "!="},
 		{token.INT, "9"}, {token.SEMICOLON, ";"},
 
+		{token.STRING, "hello"}, {token.SEMICOLON, ";"},
+
+		{token.STRING, "hello"}, {token.PLUS, "+"},
+		{token.STRING, "world"}, {token.SEMICOLON, ";"},
+
+		{token.STRING, ""}, {token.SEMICOLON, ";"},
+
 		{token.EOF, ""},
 	}
 
@@ -87,8 +100,8 @@ if (5 < 10) {
 		tok := l.NextToken()
 
 		if tok.Type != tt.expectedType {
-			t.Fatalf("tests[%d] - token type wrong. expected %q, got %q",
-				i, tt.expectedType, tok.Type)
+			t.Fatalf("tests[%d] - token type wrong. expected %q, got %q (%q)",
+				i, tt.expectedType, tok.Type, tok.Literal)
 		}
 
 		if tok.Literal != tt.expectedLiteral {
