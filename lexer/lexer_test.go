@@ -32,6 +32,8 @@ if (5 < 10) {
 "hello" + "world";
 
 "";
+
+[1, 2];
 `
 
 	tc := []struct {
@@ -90,6 +92,10 @@ if (5 < 10) {
 		{token.STRING, "world"}, {token.SEMICOLON, ";"},
 
 		{token.STRING, ""}, {token.SEMICOLON, ";"},
+
+		{token.LBRACKET, "["}, {token.INT, "1"},
+		{token.COMMA, ","}, {token.INT, "2"},
+		{token.RBRACKET, "]"}, {token.SEMICOLON, ";"},
 
 		{token.EOF, ""},
 	}

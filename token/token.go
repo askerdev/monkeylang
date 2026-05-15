@@ -28,10 +28,12 @@ const (
 	COMMA     Type = ","
 	SEMICOLON Type = ";"
 
-	LPAREN Type = "("
-	RPAREN Type = ")"
-	LBRACE Type = "{"
-	RBRACE Type = "}"
+	LPAREN   Type = "("
+	RPAREN   Type = ")"
+	LBRACE   Type = "{"
+	RBRACE   Type = "}"
+	LBRACKET Type = "["
+	RBRACKET Type = "]"
 
 	// Keywords
 	FUNCTION Type = "FUNCTION"
