@@ -28,3 +28,6 @@ let double = fn(x) { x * 2; };
 map(a, double);
 
 reduce(a, 0, fn(initial, el) { initial + el; });
+
+let m = { "foo": "bar" };
+m["foo"];
